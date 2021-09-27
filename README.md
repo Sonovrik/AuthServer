@@ -1,5 +1,11 @@
-# ft_transcendence
+# Auth Server
 
-Если находимся в школе, то для запуска Docker используем init_docker.sh
-Далее или запускаем с помощью docker-compose up --build
-Или испольуем WebStorm для старта
+## Description
+The authentication server. The login is carried out through the Intra42 platform and confirmed by e-mail (2-factor authentication).
+
+How tokens works
+![Uploading Screen Shot 2021-07-17 at 7.38.45 PM.png…]()
+
+
+### Run the project
+docker compose up --build
