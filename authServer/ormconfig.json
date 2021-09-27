@@ -1,0 +1,26 @@
+{
+    "type": "postgres",
+    "host": "postgres",
+    "port": 5432,
+    "username": "root",
+    "password": "root",
+    "database": "auth",
+    "synchronize": true,
+    "logging": true,
+    "entities": [
+        "build/**/*.entity.{ts,js}"
+    ],
+    "migrationsTableName": "migration",
+    "migrations": [
+        "build/migration/**/*.{ts,js}"
+    ],
+    "subscribers": [
+        "build/subscriber/**/*.{ts,js}"
+    ],
+    "cli": {
+        "entitiesDir": "src/entity",
+        "migrationsDir": "src/migration",
+        "subscribersDir": "src/subscriber"
+    },
+    "ssl": false
+}

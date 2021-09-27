@@ -1,0 +1,111 @@
+version: '3.9'
+
+services:
+
+  postgres:
+    image: postgres:13.3-alpine
+    container_name: postgress-container
+    environment:
+      POSTGRES_USER: '${POSTGRES_USER}'
+      POSTGRES_PASSWORD: '${POSTGRES_PASSWORD}'
+      POSTGRES_DB: '${POSTGRES_DB_BACK}'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init_postgres.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - '${POSTGRES_HOST_PORT}:${POSTGRES_CONTAINER_PORT}'
+    networks:
+      - backend
+    restart: always
+
+  nestjs:
+    build:
+      context: ./nestJS
+      dockerfile: Dockerfile
+    container_name: nestjs-container
+    environment:
+      POSTGRES_HOST: '${POSTGRES_HOST}'
+      POSTGRES_USER: '${POSTGRES_USER}'
+      POSTGRES_PASSWORD: '${POSTGRES_PASSWORD}'
+      POSTGRES_DB: '${POSTGRES_DB_BACK}'
+      POSTGRES_CONTAINER_PORT: '${POSTGRES_CONTAINER_PORT}'
+      NESTJS_CONTAINER_PORT: '${NESTJS_CONTAINER_PORT}'
+      AUTH_SERVER_HOST_PORT: '${AUTH_SERVER_HOST_PORT}'
+      ACCESS_TOKEN_COOKIE_NAME: '${ACCESS_TOKEN_COOKIE_NAME}'
+      REFRESH_TOKEN_COOKIE_NAME: '${REFRESH_TOKEN_COOKIE_NAME}'
+    volumes:
+      - ./nestJS:/nestJS
+      - ./usersAvatars:/usersAvatars
+    ports:
+      - '${NESTJS_HOST_PORT}:${NESTJS_CONTAINER_PORT}'
+    networks:
+      - backend
+      - frontend
+    restart: always
+    depends_on:
+      - postgres
+
+  auth_server:
+    build:
+      context: ./authServer
+      dockerfile: Dockerfile
+    container_name: authServer-container
+    volumes:
+      - ./authServer:/authServer
+    environment:
+      POSTGRES_HOST: '${POSTGRES_HOST}'
+      POSTGRES_USER: '${POSTGRES_USER}'
+      POSTGRES_PASSWORD: '${POSTGRES_PASSWORD}'
+      POSTGRES_DB: '${POSTGRES_DB_AUTH}'
+      POSTGRES_CONTAINER_PORT: '${POSTGRES_CONTAINER_PORT}'
+      AUTH_SERVER_CONTAINER_PORT: '${AUTH_SERVER_CONTAINER_PORT}'
+      JWT_ACCESS_TOKEN_SECRET: '${JWT_ACCESS_TOKEN_SECRET}'
+      JWT_ACCESS_TOKEN_EXPIRATION_TIME: '${JWT_ACCESS_TOKEN_EXPIRATION_TIME}'
+      JWT_REFRESH_TOKEN_SECRET: '${JWT_REFRESH_TOKEN_SECRET}'
+      JWT_REFRESH_TOKEN_EXPIRATION_TIME: '${JWT_REFRESH_TOKEN_EXPIRATION_TIME}'
+      EMAIL_SENDER: '${EMAIL_SENDER}'
+      EMAIL_PASS: '${EMAIL_PASS}'
+      SMTP_SERVER: '${SMTP_SERVER}'
+      SMTP_SECRURE_PORT: '${SMTP_SECRURE_PORT}'
+      SMTP_PORT: '${SMTP_PORT}'
+      ACCESS_TOKEN_COOKIE_NAME: '${ACCESS_TOKEN_COOKIE_NAME}'
+      REFRESH_TOKEN_COOKIE_NAME: '${REFRESH_TOKEN_COOKIE_NAME}'
+      INTRA_URI: '${INTRA_URI}'
+      CLIENT_ID: '${CLIENT_ID}'
+      CLIENT_SECRET: '${CLIENT_SECRET}'
+      REDIRECT_URI: '${REDIRECT_URI}'
+      HOME_PAGE_URI: '${HOME_PAGE_URI}'
+    ports:
+      - '${AUTH_SERVER_HOST_PORT}:${AUTH_SERVER_CONTAINER_PORT}'
+    networks:
+      - backend
+    restart: always
+    depends_on:
+      - postgres
+
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+    networks:
+      - backend
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - '${REDIS_SERVER_HOST_PORT}:${REDIS_CONTAINER_PORT}'
+    depends_on:
+      - redis
+    networks:
+      - backend
+
+volumes:
+  pgdata:
+
+networks:
+  backend:
+    driver: bridge
+  frontend:
+    driver: bridge
